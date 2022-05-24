@@ -24,8 +24,6 @@ def download_df(message):
 
 @bot.message_handler(commands=['histograma'])
 def plot_histogram(message):
-    global state
-    state = 'hist'
     bot.set_state(user_id=message.from_user.id, 
                   state='hist', 
                   chat_id=message.chat.id)
