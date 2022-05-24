@@ -3,12 +3,25 @@ import requests
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVR
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import OneHotEncoder
 import telebot
 
 from token_file import TOKEN
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 df = None
+
+def preprocess_data(message):
+    df_temp = df.copy()
+    Y_train = df_temp.pop(message.text)
+    X_train = df_temp.copy()
+    X_train_num, X_train_cat = X_train.select_dtypes(include=np.number), X_train.select_dtypes(exclude=np.number)
+    X_train_cat = OneHotEncoder(sparse=False).fit_transform(X_train_cat)
+    X_train = np.concatenate([X_train_num, X_train_cat], axis=-1)
+    return X_train, Y_train
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -66,12 +79,7 @@ def start_classification_model(message):
 
 @bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='clasificacion' and m.text in df.columns)
 def train_classification_model(message):
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import cross_val_score
-    
-    df_temp = df.copy()
-    Y_train = df_temp.pop(message.text)
-    X_train = df_temp.copy()
+    X_train, Y_train = preprocess_data(message)
     results = cross_val_score(LogisticRegression(), X_train, Y_train, cv=5)
 
     bot.reply_to(message, f'La regresión logística obtiene una precisión de {results.mean():.2f} +- {results.std():.2f}.\n'+
@@ -81,6 +89,33 @@ def train_classification_model(message):
                   state=None, 
                   chat_id=message.chat.id)
 
+@bot.message_handler(commands=['regresion'])
+def start_classification_model(message):
+    if df is None:
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        return
+    bot.set_state(user_id=message.from_user.id, 
+                  state='regresion', 
+                  chat_id=message.chat.id)
+    markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, 
+                                               selective=False)
+    items = [telebot.types.KeyboardButton(var) for var in df.columns]
+    markup.add(*items)
+    bot.send_message(message.chat.id, 
+                     'Indica qué variable quieres predecir.\n'+ 
+                     'En la versión de prueba solamente está permitido predecir una variable.', reply_markup=markup)
+
+@bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='regresion' and m.text in df.columns)
+def train_classification_model(message):
+    X_train, Y_train = preprocess_data(message)
+    results = cross_val_score(SVR(), X_train, Y_train, cv=5)
+
+    bot.reply_to(message, f'El SVM obtiene un coeficiente de correlación R2 de {results.mean():.2f} +- {results.std():.2f}.\n'+
+                           'Recuerda que si quieres poder guardar el modelo o ajustar los parámetros necesitas una suscripción de pago.')
+    
+    bot.set_state(user_id=message.from_user.id, 
+                  state=None, 
+                  chat_id=message.chat.id)
 
 ## Starting the bot
 bot.infinity_polling()
