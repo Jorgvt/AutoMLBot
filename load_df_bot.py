@@ -7,7 +7,6 @@ from token_file import TOKEN
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 df = None
-state = None
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
