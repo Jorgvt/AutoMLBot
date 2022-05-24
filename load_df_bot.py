@@ -38,7 +38,7 @@ def start_histogram(message):
     markup.add(*items)
     bot.send_message(message.chat.id, 'Elige una variable:', reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.text in df.columns and bot.get_state(m.from_user.id, m.chat.id)=='hist')
+@bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='hist' and m.text in df.columns)
 def plot_histogram(message):
     df.hist(message.text)
     plt.savefig('/tmp/photo.png')
@@ -64,7 +64,7 @@ def start_classification_model(message):
                      'Indica qué variable quieres predecir.\n'+ 
                      'En la versión de prueba solamente está permitido predecir una variable.', reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.text in df.columns and bot.get_state(m.from_user.id, m.chat.id)=='clasificacion')
+@bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='clasificacion' and m.text in df.columns)
 def train_classification_model(message):
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import cross_val_score
