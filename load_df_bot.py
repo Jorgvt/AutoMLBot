@@ -24,6 +24,9 @@ def download_df(message):
 
 @bot.message_handler(commands=['histograma'])
 def plot_histogram(message):
+    if df is None:
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        return
     bot.set_state(user_id=message.from_user.id, 
                   state='hist', 
                   chat_id=message.chat.id)
