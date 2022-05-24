@@ -36,10 +36,7 @@ def plot_histogram(message):
     markup.add(*items)
     bot.send_message(message.chat.id, 'Elige una variable:', reply_markup=markup)
 
-def check_histogram(message):
-    return message.text in df.columns and bot.get_state(message.from_user.id, message.chat.id)=='hist'
-
-@bot.message_handler(func=check_histogram)
+@bot.message_handler(func=lambda m: m.text in df.columns and bot.get_state(m.from_user.id, m.chat.id)=='hist')
 def plot_histogram(message):
     df.hist(message.text)
     plt.savefig('/tmp/photo.png')
