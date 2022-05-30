@@ -53,6 +53,7 @@ def start_histogram(message):
 
 @bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='hist' and m.text in df.columns)
 def plot_histogram(message):
+    plt.figure()
     df.hist(message.text)
     plt.savefig('/tmp/photo.png')
     with open('/tmp/photo.png', 'rb') as photo:
@@ -78,7 +79,8 @@ def start_boxplot(message):
                      reply_markup=markup)
 
 @bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='boxplot' and m.text in df.columns)
-def plot_histogram(message):
+def plot_boxplot(message):
+    plt.figure()
     df.boxplot(message.text)
     plt.savefig('/tmp/photo.png')
     with open('/tmp/photo.png', 'rb') as photo:
