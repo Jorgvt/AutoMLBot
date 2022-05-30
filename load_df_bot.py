@@ -23,9 +23,30 @@ def preprocess_data(message):
     X_train = np.concatenate([X_train_num, X_train_cat], axis=-1)
     return X_train, Y_train
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, 'Saludos, humano!')
+    bot.reply_to(message, '🤖 Saludos, humano! 🫡\nUtiliza /help para ver todos los comandos disponibles.')
+
+@bot.message_handler(commands=['help', 'ayuda'])
+def send_welcome(message):
+    msg = """¡Bienvenid@! 👋
+
+Este bot está preparado para realizar una presentación de los servicios de AutoML de nuestra plataforma. 
+Antes de poder utilizarlo tendrás que subir un archivo de datos en formato .csv.
+Los comandos disponibles son:
+
+*Visualización* 📊
+/histograma -> Realiza un histograma de la variable que le pidas.
+/boxplot -> Realiza un boxplot de la variable que le pidas.
+
+*Predicción* 🔮
+/clasificacion -> Ajusta una regresión logística para predecir la variable deseada.
+/regresion -> Ajusta un SVM para predecir la variable deseada.
+
+*Misc.* 🤝
+/contacto -> Muestra nuestra página web para que puedas obtener más información de nuestro servicio de pago.
+    """
+    bot.reply_to(message, msg, parse_mode='Markdown')
 
 @bot.message_handler(content_types=['document'])
 def download_df(message):
@@ -40,7 +61,7 @@ def download_df(message):
 @bot.message_handler(commands=['histograma'])
 def start_histogram(message):
     if df is None:
-        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos. 😠')
         return
     bot.set_state(user_id=message.from_user.id, 
                   state='hist', 
@@ -49,7 +70,9 @@ def start_histogram(message):
                                                selective=False)
     items = [telebot.types.KeyboardButton(var) for var in df.columns]
     markup.add(*items)
-    bot.send_message(message.chat.id, 'Elige una variable:', reply_markup=markup)
+    bot.send_message(message.chat.id, 'Elige una variable.\n'+
+                                      'En la versión de prueba solamente está permitido visualizar una variable.', 
+                     reply_markup=markup)
 
 @bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='hist' and m.text in df.columns)
 def plot_histogram(message):
@@ -65,7 +88,7 @@ def plot_histogram(message):
 @bot.message_handler(commands=['boxplot'])
 def start_boxplot(message):
     if df is None:
-        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos. 😠')
         return
     bot.set_state(user_id=message.from_user.id, 
                   state='boxplot', 
@@ -92,7 +115,7 @@ def plot_boxplot(message):
 @bot.message_handler(commands=['clasificacion'])
 def start_classification_model(message):
     if df is None:
-        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos. 😠')
         return
     bot.set_state(user_id=message.from_user.id, 
                   state='clasificacion', 
@@ -111,7 +134,7 @@ def train_classification_model(message):
     results = cross_val_score(LogisticRegression(), X_train, Y_train, cv=5)
 
     bot.reply_to(message, f'La regresión logística obtiene una precisión de {results.mean():.2f} +- {results.std():.2f}.\n'+
-                           'Recuerda que si quieres poder guardar el modelo o ajustar los parámetros necesitas una suscripción de pago.')
+                           'Recuerda que si quieres poder guardar el modelo o ajustar los parámetros necesitas una suscripción de pago. 🤑')
     
     bot.set_state(user_id=message.from_user.id, 
                   state=None, 
@@ -120,7 +143,7 @@ def train_classification_model(message):
 @bot.message_handler(commands=['regresion'])
 def start_classification_model(message):
     if df is None:
-        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos. 😠')
         return
     bot.set_state(user_id=message.from_user.id, 
                   state='regresion', 
@@ -139,7 +162,7 @@ def train_classification_model(message):
     results = cross_val_score(SVR(), X_train, Y_train, cv=5)
 
     bot.reply_to(message, f'El SVM obtiene un coeficiente de correlación R2 de {results.mean():.2f} +- {results.std():.2f}.\n'+
-                           'Recuerda que si quieres poder guardar el modelo o ajustar los parámetros necesitas una suscripción de pago.')
+                           'Recuerda que si quieres poder guardar el modelo o ajustar los parámetros necesitas una suscripción de pago. 🤑')
     
     bot.set_state(user_id=message.from_user.id, 
                   state=None, 
