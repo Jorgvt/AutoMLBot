@@ -61,6 +61,34 @@ def plot_histogram(message):
                   state=None, 
                   chat_id=message.chat.id)
 
+@bot.message_handler(commands=['boxplot'])
+def start_boxplot(message):
+    if df is None:
+        bot.reply_to(message, 'Primero tienes que subir un archivos de datos.')
+        return
+    bot.set_state(user_id=message.from_user.id, 
+                  state='boxplot', 
+                  chat_id=message.chat.id)
+    markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, 
+                                               selective=False)
+    items = [telebot.types.KeyboardButton(var) for var in df.columns]
+    markup.add(*items)
+    bot.send_message(message.chat.id, 'Elige una variable.\n'+
+                                      'En la versión de prueba solamente está permitido visualizar una variable.', 
+                     reply_markup=markup)
+
+@bot.message_handler(func=lambda m: bot.get_state(m.from_user.id, m.chat.id)=='boxplot' and m.text in df.columns)
+def plot_histogram(message):
+    df.boxplot(message.text)
+    plt.savefig('/tmp/photo.png')
+    with open('/tmp/photo.png', 'rb') as photo:
+        bot.send_photo(message.chat.id, photo)
+    bot.set_state(user_id=message.from_user.id, 
+                  state=None, 
+                  chat_id=message.chat.id)
+
+
+
 @bot.message_handler(commands=['clasificacion'])
 def start_classification_model(message):
     if df is None:
