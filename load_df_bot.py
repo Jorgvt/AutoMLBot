@@ -89,8 +89,6 @@ def plot_boxplot(message):
                   state=None, 
                   chat_id=message.chat.id)
 
-
-
 @bot.message_handler(commands=['clasificacion'])
 def start_classification_model(message):
     if df is None:
@@ -146,6 +144,10 @@ def train_classification_model(message):
     bot.set_state(user_id=message.from_user.id, 
                   state=None, 
                   chat_id=message.chat.id)
+
+@bot.message_handler(commands=['contacto'])
+def send_contact(message):
+    bot.reply_to(message, 'Puedes encontrar más información sobre nuestros servicios en: https://thisstartupdoesnotexist.com/')
 
 ## Starting the bot
 bot.infinity_polling()
